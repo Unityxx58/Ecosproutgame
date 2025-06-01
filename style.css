@@ -1,1 +1,285 @@
+const gardenRows = 3;
+const gardenCols = 5;
+const gardenSize = gardenRows * gardenCols;
+
+let coins = 100;
+const maxGrowthStage = 3;
+let selectedShop = 'seed';
+let selectedItem = null;
+
+const seedInventory = {
+  carrot: 0,
+  tomato: 0,
+  sunflower: 0
+};
+const plantInventory = {};
+const productInventory = {
+  fertilizer: 0,
+  water: 0
+};
+
+// Seed data
+const seeds = {
+  carrot: { cost: 10, growTime: 5, sellPrice: 15, img: 'https://i.imgur.com/e8kqgN0.png' },
+  tomato: { cost: 15, growTime: 7, sellPrice: 25, img: 'https://i.imgur.com/qR6d5wS.png' },
+  sunflower: { cost: 20, growTime: 10, sellPrice: 40, img: 'https://i.imgur.com/VXk6PAZ.png' }
+};
+
+// Plants shop (pre-grown plants you can buy)
+const plants = {
+  sunflower: { cost: 60, sellPrice: 40, img: 'https://i.imgur.com/VXk6PAZ.png' }
+};
+
+// Products shop
+const products = {
+  fertilizer: { cost: 20, description: "Speeds up growth temporarily" },
+  water: { cost: 5, description: "Keeps plants healthy" }
+};
+
+// Garden plots: each plot { seed: null|string, growth: 0..max, plantedAt: timestamp, watered: bool, fertilized: bool }
+let garden = [];
+
+const coinsSpan = document.getElementById('coins');
+const gardenDiv = document.getElementById('garden');
+const shopContainer = document.getElementById('shop-container');
+const buyBtn = document.getElementById('buy-btn');
+
+function updateCoins() {
+  coinsSpan.textContent = coins;
+}
+
+function initGarden() {
+  garden = [];
+  for(let i=0; i<gardenSize; i++){
+    garden.push({ seed: null, growth: 0, plantedAt: 0, watered: false, fertilized: false });
+  }
+}
+
+function renderGarden(){
+  gardenDiv.innerHTML = '';
+  garden.forEach((plot, i) => {
+    const div = document.createElement('div');
+    div.className = 'plot ' + (plot.seed ? '' : 'empty');
+    div.dataset.index = i;
+    div.onclick = () => plotClicked(i);
+
+    if(plot.seed){
+      const plantDiv = document.createElement('div');
+      plantDiv.className = 'plant';
+      plantDiv.style.backgroundImage = `url(${seeds[plot.seed]?.img || plants[plot.seed]?.img})`;
+      const scale = 0.5 + (plot.growth / maxGrowthStage) * 0.5;
+      plantDiv.style.transform = `scale(${scale})`;
+      div.appendChild(plantDiv);
+    }
+    gardenDiv.appendChild(div);
+  });
+}
+
+function showShop(shop){
+  selectedShop = shop;
+  selectedItem = null;
+  buyBtn.disabled = true;
+  renderShop();
+}
+
+function renderShop(){
+  let html = '';
+  if(selectedShop === 'seed'){
+    html += '<h3>Seed Shop</h3>';
+    for(const key in seeds){
+      html += `<button onclick="selectItem('${key}')">${capitalize(key)} Seed (Cost: ${seeds[key].cost}) - You have: ${seedInventory[key]}</button>`;
+    }
+  } else if(selectedShop === 'plant'){
+    html += '<h3>Plants Shop</h3>';
+    for(const key in plants){
+      const count = plantInventory[key] || 0;
+      html += `<button onclick="selectItem('${key}')">${capitalize(key)} (Cost: ${plants[key].cost}) - You have: ${count}</button>`;
+    }
+  } else if(selectedShop === 'product'){
+    html += '<h3>Products Shop</h3>';
+    for(const key in products){
+      html += `<button onclick="selectItem('${key}')">${capitalize(key)} (Cost: ${products[key].cost}) - You have: ${productInventory[key]}</button><br><small>${products[key].description}</small>`;
+    }
+  }
+  shopContainer.innerHTML = html;
+
+  // Add click listeners for the generated buttons
+  shopContainer.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectItem(btn.textContent.split(' ')[0].toLowerCase());
+    });
+  });
+}
+
+function selectItem(item){
+  selectedItem = item;
+  buyBtn.disabled = false;
+  alert(`Selected: ${capitalize(item)}`);
+}
+
+function buySelectedItem(){
+  if(!selectedItem){
+    alert('Select an item first!');
+    return;
+  }
+  if(selectedShop === 'seed'){
+    if(coins >= seeds[selectedItem].cost){
+      coins -= seeds[selectedItem].cost;
+      seedInventory[selectedItem]++;
+      updateCoins();
+      renderShop();
+    } else {
+      alert('Not enough coins!');
+    }
+  } else if(selectedShop === 'plant'){
+    if(coins >= plants[selectedItem].cost){
+      coins -= plants[selectedItem].cost;
+      plantInventory[selectedItem] = (plantInventory[selectedItem] || 0) + 1;
+      updateCoins();
+      renderShop();
+    } else {
+      alert('Not enough coins!');
+    }
+  } else if(selectedShop === 'product'){
+    if(coins >= products[selectedItem].cost){
+      coins -= products[selectedItem].cost;
+      productInventory[selectedItem]++;
+      updateCoins();
+      renderShop();
+    } else {
+      alert('Not enough coins!');
+    }
+  }
+}
+
+function plotClicked(i){
+  if(!selectedItem){
+    alert('Select an item from the shop to use!');
+    return;
+  }
+  const plot = garden[i];
+  if(selectedShop === 'seed'){
+    if(plot.seed){
+      alert('Plot already has a plant!');
+      return;
+    }
+    if(seedInventory[selectedItem] > 0){
+      plot.seed = selectedItem;
+      plot.growth = 0;
+      plot.plantedAt = Date.now();
+      plot.watered = false;
+      plot.fertilized = false;
+      seedInventory[selectedItem]--;
+      selectedItem = null;
+      buyBtn.disabled = true;
+      renderShop();
+      renderGarden();
+    } else {
+      alert('You do not have that seed!');
+    }
+  } else if(selectedShop === 'plant'){
+    if(plot.seed){
+      alert('Plot already has a plant!');
+      return;
+    }
+    if(plantInventory[selectedItem] && plantInventory[selectedItem] > 0){
+      plot.seed = selectedItem;
+      plot.growth = maxGrowthStage;
+      plot.plantedAt = Date.now();
+      plot.watered = true;
+      plot.fertilized = true;
+      plantInventory[selectedItem]--;
+      selectedItem = null;
+      buyBtn.disabled = true;
+      renderShop();
+      renderGarden();
+    } else {
+      alert('You do not have that plant!');
+    }
+  } else if(selectedShop === 'product'){
+    if(!plot.seed){
+      alert('There is no plant in this plot!');
+      return;
+    }
+    if(productInventory[selectedItem] > 0){
+      if(selectedItem === 'water'){
+        plot.watered = true;
+      } else if(selectedItem === 'fertilizer'){
+        plot.fertilized = true;
+      }
+      productInventory[selectedItem]--;
+      selectedItem = null;
+      buyBtn.disabled = true;
+      renderShop();
+      renderGarden();
+    } else {
+      alert('You do not have that product!');
+    }
+  }
+}
+
+function growPlants(){
+  const now = Date.now();
+  garden.forEach(plot => {
+    if(plot.seed && plot.growth < maxGrowthStage){
+      const seedData = seeds[plot.seed];
+      if(!seedData) return;
+      let growTime = seedData.growTime * 1000;
+      if(plot.watered) growTime *= 0.7; // 30% faster
+      if(plot.fertilized) growTime *= 0.5; // 50% faster
+      const elapsed = now - plot.plantedAt;
+      const stage = Math.min(maxGrowthStage, Math.floor(elapsed / (growTime / maxGrowthStage)));
+      if(stage > plot.growth){
+        plot.growth = stage;
+        if(plot.growth === maxGrowthStage){
+          alert(`${capitalize(plot.seed)} is fully grown!`);
+        }
+      }
+    }
+  });
+  renderGarden();
+}
+
+function sellPlants(){
+  let soldCount = 0;
+  garden.forEach(plot => {
+    if(plot.seed && plot.growth === maxGrowthStage){
+      const sellPrice = seeds[plot.seed]?.sellPrice || plants[plot.seed]?.sellPrice || 0;
+      coins += sellPrice;
+      soldCount++;
+      // Clear plot
+      plot.seed = null;
+      plot.growth = 0;
+      plot.plantedAt = 0;
+      plot.watered = false;
+      plot.fertilized = false;
+    }
+  });
+  if(soldCount > 0){
+    alert(`Sold ${soldCount} fully grown plants for ${soldCount * 10} coins!`);
+    updateCoins();
+    renderGarden();
+  } else {
+    alert('No fully grown plants to sell!');
+  }
+}
+
+function capitalize(s){
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function gameLoop(){
+  growPlants();
+  setTimeout(gameLoop, 1000);
+}
+
+// Initialize
+updateCoins();
+initGarden();
+renderGarden();
+showShop('seed');
+
+buyBtn.onclick = buySelectedItem;
+
+gameLoop();
 
