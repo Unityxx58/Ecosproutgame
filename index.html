@@ -33,5 +33,115 @@
 
 <script src="script.js"></script>
 </body>
-</html>
+</html>\
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Press Start 2P', cursive;
+  background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1470&q=80') no-repeat center center fixed;
+  background-size: cover;
+  color: #fff;
+  text-shadow: 0 0 5px #000;
+  user-select: none;
+}
+
+h1 {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 2.5rem;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+}
+
+.garden {
+  display: grid;
+  grid-template-columns: repeat(5, 120px);
+  grid-template-rows: repeat(3, 120px);
+  gap: 20px;
+  justify-content: center;
+  margin: 40px auto;
+}
+
+.plot {
+  background: radial-gradient(circle at center, #654321, #3a2a0f);
+  border-radius: 30px 30px 15px 15px;
+  box-shadow:
+    inset 0 5px 10px rgba(255,255,255,0.2),
+    0 5px 10px rgba(0,0,0,0.8);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.plot:hover {
+  transform: translateY(-10px) scale(1.05);
+  box-shadow:
+    inset 0 7px 15px rgba(255,255,255,0.3),
+    0 10px 15px rgba(0,0,0,0.9);
+}
+
+.plant {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 100px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  animation: growAnimation 3s ease forwards;
+}
+
+@keyframes growAnimation {
+  0% {
+    transform: translateX(-50%) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.shops {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+button.shop-btn {
+  background: linear-gradient(145deg, #2c7a2c, #1d4d1d);
+  border: 3px solid #4caf50;
+  border-radius: 15px;
+  color: #d4ffd4;
+  font-size: 1.2rem;
+  padding: 14px 28px;
+  cursor: pointer;
+  box-shadow:
+    0 0 10px #4caf50,
+    inset 0 2px 4px rgba(255,255,255,0.2);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+button.shop-btn:hover {
+  background: linear-gradient(145deg, #4caf50, #2c7a2c);
+  box-shadow:
+    0 0 20px #76ff03,
+    inset 0 4px 8px rgba(255,255,255,0.4);
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.status {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px #0f0;
+}
+
 
